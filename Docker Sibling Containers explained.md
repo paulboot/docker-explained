@@ -1,5 +1,7 @@
 ## Sibling Containers explained
 
+*Source ([Andrea Colangelo](https://medium.com/@andreacolangelo?source=post_page-----27dc02ff2686----------------------)):*
+
 Docker Containers are among the best options when you need to start a repeatable task in a clean context. This is especially common when it comes to CI/CD. As your pipeline requires a step where you run tests against your code, you want to get results from a pristine environment.
 
 A Docker Container comes in hand in that regard. They are great for fire-and-forget tasks like that, where the container does its job and then it’s trashed immediately after. Nevertheless, the image it came from can be used to spawn a brand new container for another round of tests. *Wash, rinse, repeat*.
