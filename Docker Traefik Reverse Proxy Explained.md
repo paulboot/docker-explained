@@ -23,10 +23,9 @@ In this tutorial you’ll configure Traefik v2 to route requests to two differen
 
 To complete this tutorial, you will need the following:
 
-* One Ubuntu 20.04 server with a sudo non-root user and a firewall. You can set this up by following your [Ubuntu 20.04 initial server setup guide](https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-20-04).
 * Docker installed on your server, which you can accomplish by following **Steps 1 and 2** of [How to Install and Use Docker on Ubuntu 20.04](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04).
 * Docker Compose installed using the instructions from **Step 1** of [How to Install Docker Compose on Ubuntu 20.04](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04).
-* A domain and three A records, `db-admin.your_domain`, `blog.your_domain` and `monitor.your_domain`. Each should point to the IP address of your server. You can learn how to point domains to DigitalOcean Droplets by reading through [DigitalOcean’s Domains and DNS documentation](https://www.digitalocean.com/docs/networking/dns/). Throughout this tutorial, substitute your domain for `your_domain` in the configuration files and examples.
+* A domain and three A records, `db-admin.your_domain`, `blog.your_domain` and `monitor.your_domain`. Each should point to the IP address of your server. 
 
 
 
