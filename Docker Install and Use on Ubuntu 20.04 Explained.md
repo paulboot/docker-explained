@@ -20,6 +20,11 @@ To follow this tutorial, you will need the following:
 ## Docker Compose
 
 * https://docs.docker.com/compose/install/
+  * https://github.com/docker/compose/releases
+
+```bash
+sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+```
 
 
 
@@ -84,7 +89,7 @@ Notice that `docker-ce` is not installed, but the candidate for installation is 
 Finally, install Docker:
 
 ```
-sudo apt install docker-ce
+sudo apt-get install docker-ce docker-ce-cli containerd.io
 ```
 
 Docker should now be installed, the daemon started, and the process enabled to start on boot. Check that it’s running:
