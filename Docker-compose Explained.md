@@ -8,29 +8,29 @@
 
 ## Remember
 
-|                                                         |                                                              |
-| ------------------------------------------------------- | ------------------------------------------------------------ |
-| `docker-compose exec -T xxxx`                           | **NOTE:** spawn een terminal anders geen output ook niet na een \| pipe in een cronjob! |
-| `docker-compose down -v`                                |                                                              |
-| `docker-compose stop <service_name>`                    |                                                              |
-| `docker-compose up -d`                                  |                                                              |
-| `docker-compose up -d --no-deps <service_name>`         |                                                              |
-| `docker-compose up -d --no-deps --build <service_name>` |                                                              |
-| docker-compose up --force-recreate --build -d --no-deps |                                                              |
-| docker image prune -f                                   |                                                              |
-| docker-compose stop                                     |                                                              |
-| docker-compose down                                     |                                                              |
-| docker-compose down -v                                  |                                                              |
-| docker-compose config --services                        |                                                              |
-| docker-compose ps                                       |                                                              |
-| docker info \| grep Swarm                               |                                                              |
-| docker prune XXX (cleanup)                              |                                                              |
-| docker system prune -a                                  |                                                              |
-| docker-compose pull <service-name>                      |                                                              |
-| docker-compose build -pull                              |                                                              |
-| docker search <name>                                    |                                                              |
-| docker image ls -a --digests                            |                                                              |
-| docker info                                             |                                                              |
+|                                                           |                                                              |
+| --------------------------------------------------------- | ------------------------------------------------------------ |
+| `docker-compose exec -T xxxx`                             | **NOTE:** spawn een terminal anders geen output ook niet na een \| pipe in een cronjob! |
+| `docker-compose pull`                                     |                                                              |
+| `docker-compose stop <service_name>`                      |                                                              |
+| `docker-compose up -d`                                    |                                                              |
+| `docker-compose up -d --no-deps <service_name>`           |                                                              |
+| `docker-compose up -d --no-deps --build <service_name>`   |                                                              |
+| `docker-compose up --force-recreate --build -d --no-deps` |                                                              |
+| `docker image prune -f`                                   |                                                              |
+| `docker-compose stop`                                     | Command will stop your containers, but it won’t remove them. |
+| `docker-compose down`                                     | Command will stop your containers, but it also removes the stopped containers as well as any networks that were created. |
+| `docker-compose down -v`                                  | The `-v` flag to remove all volumes too.                     |
+| `docker-compose config --services`                        |                                                              |
+| docker-compose ps                                         |                                                              |
+| docker info \| grep Swarm                                 |                                                              |
+| docker prune XXX (cleanup)                                |                                                              |
+| docker system prune -a                                    |                                                              |
+| docker-compose pull <service-name>                        |                                                              |
+| docker-compose build -pull                                |                                                              |
+| docker search <name>                                      |                                                              |
+| docker image ls -a --digests                              |                                                              |
+| docker info                                               |                                                              |
 
 
 ## Introduction
