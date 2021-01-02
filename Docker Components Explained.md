@@ -1,6 +1,9 @@
 # Docker Components Explained
 
-**Enhanced Source:** https://www.digitalocean.com/community/tutorials/the-docker-ecosystem-an-introduction-to-common-components
+**Enhanced Source:** 
+
+* https://www.digitalocean.com/community/tutorials/the-docker-ecosystem-an-introduction-to-common-components
+* https://phoenixnap.com/kb/docker-image-vs-container
 
 ### Introduction
 
@@ -23,6 +26,68 @@ Docker’s main advantages are:
 Typically, when designing an application or service to use Docker, it works best to break out functionality into individual containers, a design decision known as service-oriented architecture. This gives you the ability to easily scale or update components independently in the future. Having this flexibility is one of the many reasons that people are interested in Docker for development and deployment.
 
 To find out more about containerizing applications with Docker, click [here](https://www.digitalocean.com/community/tutorials/the-docker-ecosystem-an-overview-of-containerization).
+
+
+
+## What is the difference between a Docker image and a container?
+
+### What is a Docker Image?
+
+A **Docker image** is an immutable (unchangeable) file that contains the source code, libraries, dependencies, tools, and other files needed for an application to run.
+
+Due to their **read-only** quality, these images are sometimes referred to as snapshots. They represent an application and its virtual environment at a specific point in time. This consistency is one of the great features of Docker. It allows developers to test and experiment software in stable, uniform conditions.
+
+Since images are, in a way, just **templates**, you cannot start or run them. What you can do is use that template as a base to build a container. A container is, ultimately, just a running image. Once you create a container, it adds a writable layer on top of the immutable image, meaning you can now modify it.
+
+The image-based on which you create a container exists separately and cannot be altered. When you run a [containerized environment](https://phoenixnap.com/kb/how-to-containerize-applications), you essentially create a **read-write copy** of that filesystem (docker image) inside the container. This adds a **container layer** which allows modifications of the entire copy of the image.
+
+![Brief explanation of Container Layer and Image layer](https://phoenixnap.com/kb/wp-content/uploads/2019/10/container-layers.png)
+
+You can create an unlimited number of Docker images from one **image base**. Each time you change the initial state of an image and save the existing state, you create a new template with an additional layer on top of it.
+
+Docker images can, therefore, consist of a **series of layers**, each differing but also originating from the previous one. Image layers represent read-only files to which a container layer is added once you use it to start up a virtual environment.
+
+### What is a Docker Container?
+
+A **Docker container** is a virtualized run-time environment where users can isolate applications from the underlying system. These containers are compact, portable units in which you can start up an application quickly and easily.
+
+A valuable feature is the **standardization** of the computing environment running inside the container. Not only does it ensure your application is working in identical circumstances, but it also simplifies sharing with other teammates.
+
+As containers are autonomous, they provide strong isolation, ensuring they do not interrupt other running containers, as well as the server that supports them. Docker claims that these units “provide the strongest isolation capabilities in the industry”. Therefore, you won’t have to worry about keeping your machine **secure** while developing an application.
+
+Unlike virtual machines (VMs) where virtualization happens at the hardware level, containers virtualize at the app layer. They can utilize one machine, share its kernel, and virtualize the operating system to run isolated processes. This makes containers extremely **lightweight**, allowing you to retain valuable resources.
+
+![The difference in structure between containers and virtual machines](https://phoenixnap.com/kb/wp-content/uploads/2019/10/container-vs-virtual-machine.png)
+
+### Docker Images vs Containers
+
+When discussing the difference between images and containers, it isn’t fair to contrast them as opposing entities. Both elements are closely **related and are part of a system** defined by the Docker platform.
+
+If you have read the previous two sections that define docker images and docker containers, you may already have some understanding as to how the two establish a relationship.
+
+Images can exist without containers, whereas a container needs to run an image to exist. Therefore, containers are dependent on images and use them to construct a run-time environment and run an application.
+
+The two concepts exist as essential components (or rather phases) in the process of running a Docker container. Having a running container is the final “phase” of that process, indicating it is dependent on previous steps and components. That is why docker images essentially govern and shape containers.
+
+#### From `Dockerfile` to Image to Container
+
+It all starts with a script of instructions that define how to build a specific Docker image. This script is called a [`Dockerfile`](https://phoenixnap.com/kb/create-docker-images-with-dockerfile). The file automatically executes the outlined commands and creates a **Docker image**.
+
+The command for creating an image from a `Dockerfile` is **`docker build`**.
+
+The image is then used as a template (or base), which a developer can copy and use it to run an application. The application needs an isolated environment in which to run – a **container**.
+
+This environment is not just a virtual “space”. It entirely relies on the image that created it. The source code, files, dependencies, and binary libraries, which are all found in the Docker image, are the ones that make up a container.
+
+To create a container layer from an image, use the command **`docker create`**.
+
+Finally, after you have launched a container from an existing image, you start its service and run the application.
+
+![how a docker container is created](https://phoenixnap.com/kb/wp-content/uploads/2019/10/crating-a-docker-container.png)
+
+#### Creating a Docker Image from a Container
+
+If you make changes to the initial image and you want to preserve it for future work, you can save the modified image by taking a screenshot of the current state of the container. By doing so, you [attach a container](https://phoenixnap.com/kb/how-to-ssh-into-docker-container) layer on top of the image, ultimately building a new immutable image. As a result, you end up with two Docker images derived from the same filesystem.
 
 
 

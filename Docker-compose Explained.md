@@ -13,15 +13,16 @@
 | `docker-compose exec -T xxxx`                             | **NOTE:** spawn een terminal anders geen output ook niet na een \| pipe in een cronjob! |
 | `docker-compose pull`                                     |                                                              |
 | `docker-compose stop <service_name>`                      |                                                              |
-| `docker-compose up -d`                                    |                                                              |
+| `docker-compose up -d`                                    | Depending on the configuration this command builds locally and image or pulls an image from a repo. Then a container and network will be build and made active. The `-d ` detaches from the log output. Use `docker-compose logs -f ` to tail the logs of all services (or also called apps). |
 | `docker-compose up -d --no-deps <service_name>`           |                                                              |
 | `docker-compose up -d --no-deps --build <service_name>`   |                                                              |
 | `docker-compose up --force-recreate --build -d --no-deps` |                                                              |
 | `docker image prune -f`                                   |                                                              |
 | `docker-compose stop`                                     | Command will stop your containers, but it won’t remove them. |
-| `docker-compose down`                                     | Command will stop your containers, but it also removes the stopped containers as well as any networks that were created. |
+| `docker-compose down`                                     | Command will stop your containers, but it also removes the stopped containers as well as any networks that were created. Will not remove images. |
 | `docker-compose down -v`                                  | The `-v` flag to remove all volumes too.                     |
 | `docker-compose config --services`                        |                                                              |
+| `docker-compose logs -f <service-name>`                   | Use  THIS `tail -f` like command to debug all or a single service. |
 | docker-compose ps                                         |                                                              |
 | docker info \| grep Swarm                                 |                                                              |
 | docker prune XXX (cleanup)                                |                                                              |
@@ -31,6 +32,8 @@
 | docker search <name>                                      |                                                              |
 | docker image ls -a --digests                              |                                                              |
 | docker info                                               |                                                              |
+| docker network ls                                         |                                                              |
+| docker network inspect <my-macvlan-net>                   |                                                              |
 
 
 ## Introduction
