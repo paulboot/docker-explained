@@ -60,11 +60,30 @@ That’s it — now test again if IPv6 connections are working on the host.
 
 # Enabling IPv6 in the Docker daemon
 
-The next step is to enable IPv6 in the Docker daemon. Looking at the [documentation for the current Docker version 19.03](https://docs.docker.com/config/daemon/ipv6/) is not very helpful: It only states to add `{ "ipv6": true }` to /etc/docker/daemon.json and `systemctl reload docker`. While reloading succeeds, it does not seem to actually enable IPv6 for Docker’s default “bridge” network (if you want to try it, look at the output of `docker network inspect bridge`). On the other hand restarting Docker with `systemctl restart docker` now entirely fails, giving the following message in /var/log/syslog:
+> **NOTE** Is this still needed oor only relevant if you want to manage the docker deamon using IPv6?
 
-> failed to start daemon: Error initializing network controller: Error creating default “bridge” network: could not find an available, non-overlapping IPv6 address pool among the defaults to assign to the network
+The next step is to enable IPv6 in the Docker daemon. Looking at the [documentation for the current Docker version 19.03](https://docs.docker.com/config/daemon/ipv6/) is not very helpful: 
 
-Useful information can be found in the issues [moby/moby#29443](https://github.com/moby/moby/issues/29443#issuecomment-267401488) and [moby/moby#36954](https://github.com/moby/moby/issues/36954) on GitHub: In addition to setting the `ipv6`-flag in daemon.json, an IPv6 subnet must be defined in `fixed-cidr-v6`.
+1. Edit `/etc/docker/daemon.json`, set the `ipv6` key to `true` and the `fixed-cidr-v6` key to your IPv6 subnet. In this example we are setting it to `2001:db8:1::/64`.
+
+   ```
+   {
+     "ipv6": true,
+     "fixed-cidr-v6": "2001:db8:1::/64"
+   }
+   ```
+
+   Save the file.
+
+2. Reload the Docker configuration file.
+
+   ```
+   $ systemctl reload docker
+   ```
+
+You can now create networks with the `--ipv6` flag and assign containers IPv6 addresses using the `--ip6` flag.
+
+Useful information can be found in the issues [moby/moby#29443](https://github.com/moby/moby/issues/29443#issuecomment-267401488) and [moby/moby#36954](https://github.com/moby/moby/issues/36954) on GitHub.
 
 The subnet configured in `fixed-cidr-v6` is used to assign IPv6 addresses to containers that are connected to Docker’s default “bridge” network. It should have a prefix length of at most 80 (i.e. a size of at least 80), which is explained in [the documentation for Docker 17.09](https://docs.docker.com/v17.09/engine/userguide/networking/default_network/ipv6/#how-ipv6-works-on-docker):
 
@@ -74,21 +93,245 @@ Note that this prefix length requirement is specific to the default “bridge”
 
 Next arises the question which subnet to specify in `fixed-cidr-v6`. This can either be a subnet of publicly routable addresses or a subnet defining a private address space. Using publicly routable addresses has the advantage that no further configuration is necessary on the host to enable IPv6 internet connectivity in the containers. However, this comes with a huge drawback: all containers are potentially fully accessible from the internet, regardless of which container ports are published (or not) in Docker. In addition, it requires that you have a public subnet of at least size /80 available. For this reason my recommendation is to always set `fixed-cidr-v6` to a private subnet, e.g. `fd00::/80`.
 
-## Configuring Docker
+**Why did we add “fixed-cidr-v6”: “2001:db8:1::/64” entry?**
 
-To enable IPv6 in Docker, first create the file /etc/docker/daemon.json with the following content (or if it already exists, add the values):
+By default, containers that are created will only get a link-local IPv6 address. To assign globally routable IPv6 addresses to your containers you have to specify an IPv6 subnet to pick the addresses from. Setting the IPv6 subnet via the `--fixed-cidr-v6` parameter when starting Docker daemon will help us achieve globally routable IPv6 address.
 
-<iframe src="https://medium.com/media/dd50782b404ec9868d0cb09e086ef826" allowfullscreen="" frameborder="0" height="127" width="680" title="Example Docker config file for IPv6 on Ubuntu 18.04" class="fj es eo ig w" scrolling="auto" style="box-sizing: inherit; width: 680px; left: 0px; top: 0px; position: absolute; height: 126.984px;"></iframe>
+The subnet for Docker containers should at least have a size of `/80`. This way an IPv6 address can end with the container’s MAC address and you prevent NDP neighbor cache invalidation issues in the Docker layer.
 
-/etc/docker/daemon.json
+With the `--fixed-cidr-v6` parameter set Docker will add a new route to the routing table. Further IPv6 routing will be enabled (you may prevent this by starting dockerd with `--ip-forward=false`).
 
-Then restart Docker:
+Let us closely examine the changes which Docker Host undergoes before & after IPv6 Enablement:
+
+**A Typical Host Network Configuration – Before IPv6 Enablement** 
+
+![img](https://collabnix.com/wp-content/uploads/2017/08/Screen-Shot-2017-08-05-at-10.48.13-AM.png)
+
+As shown above, before IPv6 protocol is enabled, the docker0 bridge network shows IPv4 address only.
+
+Let us enable IPv6 on the Host system. In case you find daemon.json already created under /etc/docker directory, don’t delete the old entries, rather just add these two below entries into the file as shown:
+
+{
+
+“ipv6”: true,
+
+“fixed-cidr-v6”: “2001:db8:1::/64”
+
+}
+
+![img](https://collabnix.com/wp-content/uploads/2017/08/Screen-Shot-2017-08-05-at-11.01.54-AM.png)
+
+Restarting the docker daemon to reflect the changes:
+
+sudo systemctl restart docker
+
+**A Typical Host Network Configuration – After IPv6 Enablement** 
+
+![img](https://collabnix.com/wp-content/uploads/2017/08/Screen-Shot-2017-08-05-at-10.54.06-AM.png)
+
+Did you see anything new? Yes, the docker0 now gets populated with IPV6 configuration.(shown below)
+
+docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default
+
+link/ether 02:42:06:62:82:4d brd ff:ff:ff:ff:ff:ff inet 172.17.0.1/16 scope global docker0 valid_lft forever preferred_lft forever
+
+inet6 2001:db8:1::1/64 scope global tentative
+
+valid_lft forever preferred_lft forever
+
+inet6 fe80::1/64 scope link tentative valid_lft forever preferred_lft forever
+
+Not only this, the docker_gwbridge network interface too received IPV6 changes:
+
+docker_gwbridge: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default
+
+link/ether 02:42:bc:0b:2a:84 brd ff:ff:ff:ff:ff:ff
+
+inet 172.18.0.1/16 scope global docker_gwbridge
+
+valid_lft forever preferred_lft forever
+
+inet6 fe80::42:bcff:fe0b:2a84/64 scope link
+
+valid_lft forever preferred_lft forever
+
+**PING TEST – Verifying IPv6 Functionalities For Docker Host containers**
+
+Let us try bringing up two containers on the same host and see if they can ping each using IPV6 address:
+
+**Setting up Ubuntu Container:**
 
 ```
-systemctl restart docker
+$ sudo docker run -itd ajeetraina/ubuntu-iproute bash
 ```
 
-## Configuring IPv6 NAT
+**Setting up CentOS Container:**
+
+```
+mymanager1==>sudo docker run -itd ajeetraina/centos-iproute bash
+```
+
+
+
+![img](https://collabnix.com/wp-content/uploads/2017/08/Screen-Shot-2017-08-05-at-11.17.09-AM.png)
+
+[Please Note: *If you are using default Ubuntu or CentOS Docker Image, you will be surprised to find that ip or ifconfig command doesn’t work. You might need to install iproute package for ip command to work & net-tools package for ifconfig to work. If you want to save time, use ajeetraina/ubuntu-iproute for Ubuntu OR ajeetraina/centos-iproute for CentOS directly.*]
+
+Now let us initiate the quick ping test:
+
+![img](https://collabnix.com/wp-content/uploads/2017/08/Screen-Shot-2017-08-05-at-11.19.29-AM.png)
+
+In this example the Docker container is assigned a link-local address with the network suffix `/64` (here: `fe80::42:acff:fe11:3/64`) and a globally routable IPv6 address (here: `2001:db8:1:0:0:242:ac11:3/64`). The container will create connections to addresses outside of the `2001:db8:1::/64` network via the link-local gateway at `fe80::1` on `eth0`.
+
+mymanager1==>sudo docker exec -it 907 ping6 fe80::42:acff:fe11:2
+
+PING fe80::42:acff:fe11:2(fe80::42:acff:fe11:2) 56 data bytes
+
+64 bytes from fe80::42:acff:fe11:2%eth0: icmp_seq=1 ttl=64 time=0.153 ms
+
+64 bytes from fe80::42:acff:fe11:2%eth0: icmp_seq=2 ttl=64 time=0.100 ms
+
+^C
+
+--- fe80::42:acff:fe11:2 ping statistics ---2 packets transmitted, 2 received, 0% packet loss, time 999
+
+msrtt min/avg/max/mdev = 0.100/0.126/0.153/0.028 ms
+
+So the two containers are able to reach out to each other using IPv6 address.
+
+# Does Docker Compose support IPv6 protocol?
+
+The answer is Yes. Let us verify it using docker-compose version 1.15.0 and compose file format 2.1. I faced an issue while I use the latest 3.3 file format. As Docker Swarm Mode doesn’t support IPv6, hence it is not included under 3.3 file format. Till then, let us try to bring up container using IPv6 address using 2.1 file format.
+
+```
+docker-compose version
+version 1.15.0, build e12f3b9
+docker-py version: 2.4.2
+CPython version: 2.7.13
+OpenSSL version: OpenSSL 1.0.1t 3 May 2016
+```
+
+
+
+Let us first verify the network available in the host machine:
+
+![img](https://collabnix.com/wp-content/uploads/2017/08/Screen-Shot-2017-08-05-at-11.44.57-PM.png)
+
+File: docker-compose.yml
+
+```yaml
+version: ‘2.1’
+services:
+app:
+image: busybox
+command: ping www.collabnix.com
+networks:
+app_net:
+ipv6_address: 2001:3200:3200::20
+networks:
+app_net:
+enable_ipv6: true
+driver: bridge
+ipam:
+driver: default
+config:
+-- subnet: 2001:3200:3200::/64
+gateway: 2001:3200:3200::1
+```
+
+
+
+The above docker-compose file will create a new network called testping_app_net based on IPv6 network under the subnet 2001:3200:3200::/64 and container should get IPv6 address automatically assigned.
+
+Let us bring up services using docker-compose up and see if the services communicates over IPv6 protocol:
+
+![img](https://collabnix.com/wp-content/uploads/2017/08/Screen-Shot-2017-08-05-at-11.49.33-PM.png)
+
+Verifying the IPv6 address for each container:
+
+![img](https://collabnix.com/wp-content/uploads/2017/08/Screen-Shot-2017-08-05-at-11.50.19-PM.png)
+
+As shown above, this new container gets IPv6 address – 2001:3200:3200::20 and hence they are able to reach other flawlessly.
+
+## Docker-compose version 3 example
+
+**Self-contained Docker stack with container and network:**
+
+```
+version: '3'
+
+networks:
+  app_net:
+    driver: overlay
+    driver_opts:
+      com.docker.network.enable_ipv6: "true"
+    ipam:
+      driver: default
+      config:
+      -
+        subnet: 172.16.238.0/24
+      -
+        subnet: 2001:3984:3989::/64        
+
+services:
+  app:
+    image: alpine
+    command: sleep 600
+    networks:
+      app_net:
+        ipv4_address: 0.0.0.0
+        ipv6_address: 2001:3984:3989::10
+```
+
+**Result:** Only IPv4 address in container, 0.0.0.0 is ignored.
+
+------
+
+**Externally pre-created network** (as per https://stackoverflow.com/a/39818953/1735931)
+
+> docker network create --driver overlay --ipv6 --subnet=2001:3984:3989::/64 --attachable ext_net
+
+```
+version: '3'
+
+networks:
+  ext_net:
+    external:
+      name: ext_net
+
+services:
+  app:
+    image: alpine
+    command: ifconfig eth0 0.0.0.0 ; sleep 600
+    cap_add:
+     - NET_ADMIN
+    networks:
+      ext_net:
+        ipv4_address: 0.0.0.0
+        ipv6_address: 2001:3984:3989::10
+```
+
+**Result:** Both IPv4 and IPv6 addresses in container, but cap_add is ignored (not supported in Swarm Mode), and thus the ifconfig disable ipv4 attempt above does not work.
+
+I don't currently have docker-compose installed, and will probably try that next, but **is there a way to run pure IPv6 containers in Docker Swarm Mode?**
+
+Note: I am able to run and configure a few IPv6-only containers manually without swarm/compose: (Create network as above or even just use the default bridge)
+
+```
+$ docker run --cap-add=NET_ADMIN --rm -it alpine
+$$ ifconfig eth0 0.0.0.0
+$$ ping6 other-container-ipv6-address # WORKS!
+```
+
+or shorthand:
+
+```
+$ docker run --cap-add=NET_ADMIN --rm -it alpine sh -c "/sbin/ifconfig eth0 0.0.0.0 ; sh"
+```
+
+
+
+## Configuring IPv6 NAT (optional??)
 
 To enable IPv6 internet access from containers, enable NAT for the private Docker subnet on the host:
 
