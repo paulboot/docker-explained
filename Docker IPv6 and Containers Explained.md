@@ -7,30 +7,10 @@
 In this article I will describe the steps necessary to enable IPv6 connectivity for Docker containers on an Ubuntu 18.04 host. This is based on my findings for a standalone Docker 19.03 installation on a virtual server. It should be applicable to similar setups and covers the following topics:
 
 - Enabling IPv6 on the Docker host
-- Enabling IPv6 in the Docker daemon
+- Enabling IPv6 in the Docker daemon (Optional!!)
 - Accessing containers over IPv6
 
 # Enabling IPv6 on the Docker host
-
-Enabling IPv6 on the host is obviously only necessary if it is not already working. An easy way to check this is to try to send IPv6 ping messages from and to the machine. To do this from an Ubuntu host use [ping6](http://manpages.ubuntu.com/manpages/bionic/man1/ping6.1.html), for example to google.com:
-
-```
-ping6 google.com -n -c 4
-```
-
-The result should look similar to this:
-
-```
-PING google.com(2a00:1450:4001:81d::200e) 56 data bytes
-64 bytes from 2a00:1450:4001:81d::200e: icmp_seq=1 ttl=57 time=3.86 ms
-64 bytes from 2a00:1450:4001:81d::200e: icmp_seq=2 ttl=57 time=3.88 ms
-64 bytes from 2a00:1450:4001:81d::200e: icmp_seq=3 ttl=57 time=3.88 ms
-64 bytes from 2a00:1450:4001:81d::200e: icmp_seq=4 ttl=57 time=3.78 ms
-
---- google.com ping statistics ---
-4 packets transmitted, 4 received, 0% packet loss, time 3003ms
-rtt min/avg/max/mdev = 3.787/3.856/3.889/0.086 ms
-```
 
 To check if the host responds to ping messages from the internet, you need to obtain its public IPv6 address, e.g. by running `ip addr show`, locating the default ethernet interface’s section and reading the IPv6 address with *scope global*. To identify the default ethernet interface, find the *default* line in the output of `ip -6 route show`. Or, to do it all in one command:
 
@@ -38,12 +18,13 @@ To check if the host responds to ping messages from the internet, you need to ob
 ip addr show $(ip -6 route show | awk '/^default/ {print $5}') | awk '/inet6 .* scope global/ {print $2}'
 ```
 
-The easiest way to ping the host’s public IPv6 address probably is to [use](https://www.ipaddressguide.com/ping6) [some](https://centralops.net/co/Ping.aspx) [online](https://www.subnetonline.com/pages/ipv6-network-tools/online-ipv6-ping.php) [service](http://www.ipv6now.com.au/pingme.php). Alternatively you can do it from your local computer if it has IPv6 connectivity. On Windows use the `ping` command, on Linux use `ping6`.
-
-If — like me — you have a server where IPv6 first needs to be manually configured, you can execute the following steps.
+The easiest way to ping the host’s public IPv6 address probably is to use:
+* https://www.ipaddressguide.com/ping6
+* https://centralops.net/co/Ping.aspx
+* https://www.subnetonline.com/pages/ipv6-network-tools/online-ipv6-ping.php
+* http://www.ipv6now.com.au/pingme.php
 
 ## Manually configure IPv6 in Netplan
-
 By default, Ubuntu 18.04 uses [Netplan](https://netplan.io/) for the network configuration. To enable IPv6 connectivity in Netplan, add IPv6 address and gateway to the .yaml-file in the /etc/netplan directory. I have seen this file being named 01-netcfg.yaml or 50-cloud-init.yaml. Here is an example of the altered file:
 
 <iframe src="https://medium.com/media/657f85b8f51dfe56d072101b6e942304" allowfullscreen="" frameborder="0" height="259" width="680" title="Example Netplan config file for IPv6 on Ubuntu 18.04" class="fj es eo ig w" scrolling="auto" style="box-sizing: inherit; width: 680px; left: 0px; top: 0px; position: absolute; height: 259px;"></iframe>
@@ -60,7 +41,13 @@ That’s it — now test again if IPv6 connections are working on the host.
 
 # Enabling IPv6 in the Docker daemon
 
-> **NOTE** Is this still needed oor only relevant if you want to manage the docker deamon using IPv6?
+> **NOTE!!** This is optional, there are ways using `docker-compose` to enable containers with IPv6 using `driver: macvlan` and not resort to 'ugly' NAT66 configurations using `/dev/docker0'.
+>
+> ```
+>     driver: macvlan
+>     driver_opts:
+>       macvlan_mode: bridge
+> ```
 
 The next step is to enable IPv6 in the Docker daemon. Looking at the [documentation for the current Docker version 19.03](https://docs.docker.com/config/daemon/ipv6/) is not very helpful: 
 
@@ -68,8 +55,8 @@ The next step is to enable IPv6 in the Docker daemon. Looking at the [documentat
 
    ```
    {
-     "ipv6": true,
-     "fixed-cidr-v6": "2001:db8:1::/64"
+       "ipv6": true,
+       "fixed-cidr-v6": "2001:db8:1::/64"
    }
    ```
 
@@ -81,7 +68,7 @@ The next step is to enable IPv6 in the Docker daemon. Looking at the [documentat
    $ systemctl reload docker
    ```
 
-You can now create networks with the `--ipv6` flag and assign containers IPv6 addresses using the `--ip6` flag.
+You can now create networks with the `--ipv6` flag and assign containers IPv6 addresses using the `--ip6` flag or use the ipv6 options in `docker-compose.yaml`
 
 Useful information can be found in the issues [moby/moby#29443](https://github.com/moby/moby/issues/29443#issuecomment-267401488) and [moby/moby#36954](https://github.com/moby/moby/issues/36954) on GitHub.
 
@@ -111,19 +98,18 @@ As shown above, before IPv6 protocol is enabled, the docker0 bridge network show
 
 Let us enable IPv6 on the Host system. In case you find daemon.json already created under /etc/docker directory, don’t delete the old entries, rather just add these two below entries into the file as shown:
 
+```
 {
-
-“ipv6”: true,
-
-“fixed-cidr-v6”: “2001:db8:1::/64”
-
+    "ipv6": true,
+    "fixed-cidr-v6": "2001:db8:1::/64"
 }
+```
 
 ![img](https://collabnix.com/wp-content/uploads/2017/08/Screen-Shot-2017-08-05-at-11.01.54-AM.png)
 
 Restarting the docker daemon to reflect the changes:
 
-sudo systemctl restart docker
+`sudo systemctl restart docker`
 
 **A Typical Host Network Configuration – After IPv6 Enablement** 
 
@@ -258,29 +244,38 @@ As shown above, this new container gets IPv6 address – 2001:3200:3200::20 and 
 **Self-contained Docker stack with container and network:**
 
 ```
-version: '3'
-
-networks:
-  app_net:
-    driver: overlay
-    driver_opts:
-      com.docker.network.enable_ipv6: "true"
-    ipam:
-      driver: default
-      config:
-      -
-        subnet: 172.16.238.0/24
-      -
-        subnet: 2001:3984:3989::/64        
+version: '3.8'
 
 services:
-  app:
-    image: alpine
-    command: sleep 600
+  proxy:
+    image: traefik:latest
+    container_name: "traefik"
+    restart: always
     networks:
-      app_net:
-        ipv4_address: 0.0.0.0
-        ipv6_address: 2001:3984:3989::10
+        external:
+            ipv4_address: 192.168.100.10
+            ipv6_address: "2001:470:7c3a:100::10"
+        vlan20:
+    dns: 192.168.100.1
+    dns: "2001:470:7c3a:100::1"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - ./etc/traefik:/etc/traefik
+
+networks:
+  external:
+    enable_ipv6: true
+    driver: macvlan
+    driver_opts:
+      macvlan_mode: bridge
+      parent: enp6s0.100
+#      com.docker.network.enable_ipv6: "true"    #NOT NEEDED
+    ipam:
+      config:
+        - subnet: 192.168.100.0/24
+          gateway: 192.168.100.1
+        - subnet: "2001:470:7c3a:100::/64"
+          gateway: "2001:470:7c3a:100::1"
 ```
 
 **Result:** Only IPv4 address in container, 0.0.0.0 is ignored.
