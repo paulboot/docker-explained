@@ -1,9 +1,12 @@
 # Docker Traefik Reverse Proxy Explained
 
-**Used Source:** 
+[toc]
+
+**Source** 
 
 * [DO How To Use Traefik v2 as a Reverse Proxy for Docker Containers on Ubuntu 20.04](https://www.digitalocean.com/community/tutorials/how-to-use-traefik-v2-as-a-reverse-proxy-for-docker-containers-on-ubuntu-20-04)
 *  [The official Traefik documentation](https://doc.traefik.io/traefik/)
+*  https://matthiasnoback.nl/2018/03/defining-multiple-similar-services-with-docker-compose/
 
 
 
@@ -29,7 +32,7 @@ To complete this tutorial, you will need the following:
 
 
 
-## Step 1 — Configuring and Running Traefik
+## Step 1 - Configuring and Running Traefik
 
 The Traefik project has an [official Docker image](https://hub.docker.com/_/traefik), so you will use that to run Traefik in a Docker container.
 
@@ -81,15 +84,13 @@ traefik.toml
     address = ":443"
 ```
 
-Copy
-
 Note that you are also automatically redirecting traffic to be handled over TLS.
 
 Next, configure the Traefik `api`, which gives you access to both the API and your dashboard interface. The heading of `[api]` is all that you need because the dashboard is then enabled by default, but you’ll be explicit for the time being.
 
 Add the following code:
 
-traefik.toml
+`traefik.toml`
 
 ```toml
 ...
@@ -97,13 +98,11 @@ traefik.toml
   dashboard = true
 ```
 
-Copy
-
 To finish securing your web requests you want to use Let’s Encrypt to generate valid TLS certificates. Traefik v2 supports Let’s Encrypt out of the box and you can configure it by creating a *certificates resolver* of the type `acme`.
 
 Let’s configure your certificates resolver now using the name `lets-encrypt`:
 
-traefik.toml
+`traefik.toml`
 
 ```toml
 ...
@@ -113,8 +112,6 @@ traefik.toml
   [certificatesResolvers.lets-encrypt.acme.tlsChallenge]
 ```
 
-Copy
-
 This section is called `acme` because [ACME](https://github.com/ietf-wg-acme/acme/) is the name of the protocol used to communicate with Let’s Encrypt to manage certificates. The Let’s Encrypt service requires registration with a valid email address, so to have Traefik generate certificates for your hosts, set the `email` key to your email address. You then specify that you will store the information that you will receive from Let’s Encrypt in a JSON file called `acme.json`.
 
 The `acme.tlsChallenge` section allows us to specify how Let’s Encrypt can verify that the certificate. You’re configuring it to serve a file as part of the challenge over port `443`.
@@ -123,8 +120,6 @@ Finally, you need to configure Traefik to work with Docker.
 
 Add the following configurations:
 
-traefik.toml
-
 ```toml
 ...
 [providers.docker]
@@ -132,15 +127,11 @@ traefik.toml
   network = "web"
 ```
 
-Copy
-
 The `docker` provider enables Traefik to act as a proxy in front of Docker containers. You’ve configured the provider to `watch` for new containers on the `web` network, which you’ll create soon.
 
 Our final configuration uses the `file` provider. With Traefik v2, static and dynamic configurations can’t be mixed and matched. To get around this, you will use `traefik.toml` to define your static configurations and then keep your dynamic configurations in another file, which you will call `traefik_dynamic.toml`. Here you are using the `file` provider to tell Traefik that it should read in dynamic configurations from a different file.
 
 Add the following `file` provider:
-
-traefik.toml
 
 ```
 [providers.file]
@@ -148,8 +139,6 @@ traefik.toml
 ```
 
 Your completed `traefik.toml` will look like this:
-
-traefik.toml
 
 ```toml
 [entryPoints]
@@ -205,8 +194,6 @@ traefik_dynamic.toml
   ]
 ```
 
-Copy
-
 To configure the router for the api you’ll once again be chaining off of the protocol name, but instead of using `http.middlewares`, you’ll use `http.routers` followed by the name of the router. In this case, the `api` provides its own named router that you can configure by using the `[http.routers.api]` section. You’ll configure the domain that you plan on using with your dashboard also by setting the `rule` key using a host match, the entrypoint to use `websecure`, and the middlewares to include `simpleAuth`.
 
 Add the following configurations:
@@ -257,7 +244,7 @@ With these configurations in place, you will now start Traefik.
 
 
 
-## Step 2 – Running the Traefik Container
+## Step 2 - Running the Traefik Container
 
 In this step you will create a Docker network for the proxy to share with containers. You will then access the Traefik dashboard. The Docker network is necessary so that you can use it with applications that are run using Docker Compose.
 
@@ -324,7 +311,7 @@ You now have your Traefik proxy running, and you’ve configured it to work with
 
 
 
-## Step 3 — Registering Containers with Traefik
+## Step 3 - Registering Containers with Traefik
 
 With the Traefik container running, you’re ready to run applications behind it. Let’s launch the following containers behind Traefik:
 
@@ -352,8 +339,6 @@ networks:
   internal:
     external: false
 ```
-
-Copy
 
 You use Docker Compose version `3` because it’s the newest major version of the Compose file format.
 
@@ -416,8 +401,6 @@ services:
     labels:
       - traefik.enable=false
 ```
-
-Copy
 
 You’re using the official MySQL 5.7 image for this container. You’ll notice that you’re once again using an `environment` item without a value. The `MYSQL_ROOT_PASSWORD` and `WORDPRESS_DB_PASSWORD` variables will need to be set to the same value to make sure that your WordPress container can communicate with the MySQL. You don’t want to expose the `mysql` container to Traefik or the outside world, so you’re only assigning this container to the `internal` network. Since Traefik has access to the Docker socket, the process will still expose a router for the `mysql` container by default, so you’ll add the label `traefik.enable=false` to specify that Traefik should not expose this container.
 
@@ -541,3 +524,207 @@ Once logged in, you’ll see the Adminer user interface.
 ![Adminer connected to the MySQL database](https://assets.digitalocean.com/articles/67541/traefik_2_adminer_screen.1.png)
 
 Both sites are now working, and you can use the dashboard at `monitor.your_domain` to keep an eye on your applications.
+
+
+
+# [Defining multiple similar services with Docker Compose](https://matthiasnoback.nl/2018/03/defining-multiple-similar-services-with-docker-compose/)
+
+**Source:** https://matthiasnoback.nl/2018/03/defining-multiple-similar-services-with-docker-compose/
+
+Posted on Mar 13th 2018 by Matthias Noback
+
+For my new workshop - ["Building Autonomous Services"](https://github.com/matthiasnoback/building-autonomous-services-workshop) - I needed to define several Docker containers/services with more or less the same setup:
+
+1. A PHP-FPM process for running the service's PHP code.
+2. An Nginx process for serving static and dynamic requests (using the PHP-FPM process as backend).
+
+To route requests properly, every Nginx service would have its own hostvcname. I didn't want to do complicated things with ports though - the Nginx services should all listen to port 80. However, on the host machine, only one service can listen on port 80. This is where reverse HTTP proxy [Traefik](https://traefik.io/) did a good job: it is the only service listening on the host on port 80, and it forwards requests to the right service based on the host name from the request.
+
+This is the configuration I came up with, but this is only for the "purchase" service. Eventually I'd need this configuration about 4 times.
+
+```yaml
+services:
+    purchase_web:
+        image: matthiasnoback/building_autonomous_services_purchase_web
+        restart: on-failure
+        networks:
+            - traefik
+            - default
+        labels:
+            - "traefik.enable=true"
+            - "traefik.docker.network=traefik"
+            - "traefik.port=80"
+        volumes:
+            - ./:/opt:cached
+        depends_on:
+            - purchase_php
+        labels:
+            - "traefik.backend=purchase_web"
+            - "traefik.frontend.rule=Host:purchase.localhost"
+
+    purchase_php_fpm:
+        image: matthiasnoback/building_autonomous_services_php_fpm
+        restart: on-failure
+        env_file: .env
+        user: ${HOST_UID}:${HOST_GID}
+        networks:
+            - traefik
+            - default
+        environment:
+            XDEBUG_CONFIG: "remote_host=${DOCKER_HOST_NAME_OR_IP}"
+        volumes:
+            - ./:/opt:cached
+```
+
+## Using Docker Compose's extend functionality
+
+Even though I usually favor composition over inheritance, also for configuration, in this case I thought I'd be better of with inheriting some configuration instead of copying it. These services don't accidentally share some setting, in the context of this workshop, these services are meant to be more or less identical, except for some variables, like the host name.
+
+So I decided to define a "template" for each service in `docker/templates.yml`:
+
+```yaml
+version: '2'
+
+services:
+    web:
+        restart: on-failure
+        networks:
+            - traefik
+            - default
+        labels:
+            - "traefik.enable=true"
+            - "traefik.docker.network=traefik"
+            - "traefik.port=80"
+        volumes:
+            - ${PWD}:/opt:cached
+
+    php-fpm:
+        image: matthiasnoback/building_autonomous_services_php_fpm
+        restart: on-failure
+        env_file: .env
+        user: ${HOST_UID}:${HOST_GID}
+        networks:
+            - traefik
+            - default
+        environment:
+            XDEBUG_CONFIG: "remote_host=${DOCKER_HOST_NAME_OR_IP}"
+        volumes:
+            - ${PWD}:/opt:cached
+```
+
+Then in `docker-compose.yml` you can fill in the details of these templates by using the [`extends`](https://docs.docker.com/compose/extends/) key (please note that you'd have to use "version 2" for that):
+
+```yaml
+services:
+    purchase_web:
+        image: matthiasnoback/building_autonomous_services_purchase_web
+        extends:
+            file: docker/templates.yml
+            service: web
+        depends_on:
+            - purchase_php
+        labels:
+            - "traefik.backend=purchase_web"
+            - "traefik.frontend.rule=Host:purchase.localhost"
+
+    purchase_php_fpm:
+        extends:
+            file: docker/templates.yml
+            service: php-fpm
+```
+
+We only define the things that can't be inherited (like `depends_on`), or that are specific to the actual service (host name).
+
+## Dynamically generate Nginx configuration
+
+Finally, I was looking for a way to get rid of specific Nginx images for every one of those "web" services. I started with a `Dockerfile` for every one of them, and a specific Nginx configuration file for each:
+
+```
+server {
+    listen 80 default_server;
+    index index.php;
+    server_name purchase.localhost;
+    root /opt/src/Purchase/public;
+
+    location / {
+        # try to serve file directly, fallback to index.php
+        try_files $uri /index.php$is_args$args;
+    }
+
+    location ~ ^/index\.php(/|$) {
+        fastcgi_pass purchase_php_fpm:9000;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+
+        # Prevents URIs that include the front controller. This will 404:
+        # https://domain.tld/index.php/some-path
+        # Remove the internal directive to allow URIs like this
+        internal;
+    }
+}
+```
+
+To reuse the Nginx image for every "web" service, I needed a way to use variables in this configuration file. The solution was documented in the description of the official `nginx` image: [Using environment variables in nginx configuration](https://hub.docker.com/_/nginx/). The trick is to use environment variables in the configuration file, and replace them with their real values when you start the Nginx container. The template configuration file could look something like this:
+
+```
+server {
+    listen 80 default_server;
+    index index.php;
+    server_name ${SERVER_NAME};
+    root ${ROOT};
+
+    location / {
+        # try to serve file directly, fallback to index.php
+        try_files $uri /index.php$is_args$args;
+    }
+
+    location ~ ^/index\.php(/|$) {
+        fastcgi_pass ${PHP_BACKEND}:9000;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+
+        # Prevents URIs that include the front controller. This will 404:
+        # https://domain.tld/index.php/some-path
+        # Remove the internal directive to allow URIs like this
+        internal;
+    }
+}
+```
+
+The problem is, the configuration file itself contains many strings that *look like environment variables* (e.g. `$realpath_root`). When using the proposed solution, all those variables were replaced by empty strings.
+
+After some fiddling (and looking up configuration options for `envsubst`), I found the solution: you can explicitly mention *which* variables should be replaced. The only other thing I needed to do is properly escape the names of these variables, to prevent them from being replaced on the spot:
+
+```docker
+FROM nginx:1.13-alpine
+COPY template.conf /etc/nginx/conf.d/site.template
+...
+CMD sh -c "envsubst '\$SERVER_NAME \$ROOT \$PHP_BACKEND' < /etc/nginx/conf.d/site.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+```
+
+At this point, I was able to build only one Docker image that could be reused by all the "web" services. I only had to set the correct environment variables in `docker-compose.yml`:
+
+```yaml
+services:
+    purchase_web:
+        # ...
+        environment:
+            - SERVER_NAME=purchase.localhost
+            - PHP_BACKEND=purchase_php
+            - ROOT=/opt/src/Purchase/public
+
+    sales_web:
+        # ...
+        environment:
+            - SERVER_NAME=sales.localhost
+            - PHP_BACKEND=sales_php
+            - ROOT=/opt/src/Sales/public
+
+    # ...
+```
+
+You'll find the complete configuration in the workshop project's repository: ["Building Autonomous Services"](https://github.com/matthiasnoback/building-autonomous-services-workshop).
