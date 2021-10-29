@@ -43,6 +43,35 @@ This offers a container-specific network stack that lacks a network interface. T
 
 This enables a container to attach to your host’s network (meaning the configuration *inside* the container **matches** the configuration *outside* the container).
 
+### MACVLAN
+
+See: https://www.youtube.com/watch?v=5grbXvV_DSk
+
+* Here docker will assign first free address and conflict with a local DHCP server.
+* Each IP address
+
+```
+docker network create -d macvlan
+—subnet 192.168.0.0/24
+—gateway 192.168.0.1
+—ip-range 192.168.0.253/32
+-o parent=enp6s0
+```
+
+### IPVLAN
+
+See: https://www.youtube.com/watch?v=5grbXvV_DSk
+
+* Only use one MAC address with several IPaddresses, mmm.
+
+
+
+### Overlay network
+
+* Used in docker-swarm, not relevant for Kubernetis
+
+
+
 ## Defining your own networks
 
 You can create multiple networks with Docker and add containers to one or more networks. Containers can communicate within networks but not *across* networks. A container with attachments to multiple networks can connect with all of the containers on all of those networks. This lets you build a “hub” of sorts to connect to multiple networks and separate concerns.
