@@ -8,6 +8,7 @@
 
 * Repo hub https://hub.docker.com/
 * Tutorial https://www.youtube.com/watch?v=iqqDU2crIEQ&t=1002s
+* See Docker file examples: https://github.com/paulboot/gns3-registry/tree/master/docker
 
 
 
@@ -40,12 +41,20 @@ FROM python:3.8
 # optional: ensure that pip is up to date
 RUN pip install --upgrade pip
 
+# optional: environment
+ENV PORT 80
+ENV HOSTNAME=gns3vm
+
+# optional: expose ports
+EXPOSE 8888
+
 # first we COPY only requirements.txt to ensure that later builds
 # with changes to your src code will be faster due to caching of this layer
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # copy all your custom modules and files from the src directory
+# NOTE .dockerignore can be used to ignore files!
 COPY src/ .
 
 # specify the script that will be executed on container start
@@ -74,7 +83,7 @@ pandas==1.2
 scikit-learn==0.24
 ```
 
-We then need to **build our image**:
+We then need to **build our image** and -t (== --tag list)
 
 ```
 docker build -t etlexample .
@@ -83,6 +92,28 @@ docker build -t etlexample .
 The dot at the end indicates a build context — for us, it means that we use `Dockerfile` from the current working directory for this build.
 
 Now your image is ready! When you type `docker image ls`, you should be able to see your image.
+
+# 4. Run image
+
+If you do not name your image docker will give it a random unique`name` it. that is NOT a `tag` because the same `tag` can run multiple times with unique `names`.
+
+`docker run etlexample`
+
+or expose a port
+
+`docket run -p 8080:80 --name hello -d hello-world`
+
+check it it is running
+
+`docker ps -a`
+
+check and tail the logs
+
+`docker logs -f`
+
+and stop it
+
+`docker stop <NAME>`
 
 # 4. Log in to Dockerhub from your Terminal
 
@@ -94,18 +125,25 @@ docker login -u myusername
 
 # 5. Tag your image
 
-By default, when we build an image, it assigns the tag `latest` which simply means the “default version” of your image. When tagging, you could assign some specific version to it. For now, we’ll go with the `latest` tag.
+By default, when we build an image, it assigns the tag `1.0.0` and not the confusing tag `latest` simply means the “default version” of your image. When tagging, you could assign some specific version to it. For now, we’ll go with the `latest` tag.
 
 ```
-docker image tag etlexample:latest myusername/etlexample:latest
+docker image tag etlexample:1.0.0 myusername/etlexample:1.0.0
 ```
 
 When you now type `docker image ls` again, you will see the image with your Dockerhub username.
 
+```
+See images and check tag and same IMAGE ID!
+<ToDo>
+```
+
+
+
 # 6. Push your image to Dockerhub
 
 ```
-docker image push myusername/etlexample:latest
+docker image push myusername/etlexample:1.0.0
 ```
 
 # 7. Test and confirm a success
@@ -113,11 +151,7 @@ docker image push myusername/etlexample:latest
 When you now try to pull this image, you should see:
 
 ```
-➜  ~ docker pull myusername/etlexample
-Using default tag: latest
-latest: Pulling from myusername/etlexample
-Digest: sha256:db08f572ccd37fa3e
-Status: Image is up to date for myusername/etlexample:latest
-docker.io/myusername/etlexample:latest
+docker pull myusername/etlexample:1.0.0
+
 ```
 
