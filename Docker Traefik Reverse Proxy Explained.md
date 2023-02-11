@@ -2,6 +2,26 @@
 
 [toc]
 
+# TL;DR
+
+* Let's Encrypt, provides Domain Validation (DV) certificates.
+
+  * It issues certificates for specific domains in exchange for proof of ownership for those domains.
+
+  * To make this exchange, domains rely on the [ACME protocol](https://en.wikipedia.org/wiki/Automatic_Certificate_Management_Environment). 
+
+  * The ACME protocol defines three challenges that must be resolved to obtain a certificate. 
+
+    * **HTTP:** Proving ownership by serving a file containing a specific token on the specific domain (on a custom path).
+
+    * **TLS:** Proving ownership by handling the connection to the specific domain with a temporary TLS certificate containing a specific token.
+
+    * **DNS:** Proving ownership by creating a TXT record containing a specific token that would be then publicly available and verified by Let’s Encrypt.
+
+  * Let’s Encrypt communicates the specific token to you after requesting a challenge in all three challenges.
+
+
+
 **Source** 
 
 * [DO How To Use Traefik v2 as a Reverse Proxy for Docker Containers on Ubuntu 20.04](https://www.digitalocean.com/community/tutorials/how-to-use-traefik-v2-as-a-reverse-proxy-for-docker-containers-on-ubuntu-20-04)

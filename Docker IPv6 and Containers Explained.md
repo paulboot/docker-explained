@@ -1,5 +1,20 @@
 # IPv6 and Containers Explained
 
+[toc]
+
+# TL;DR
+
+* Containers run IPv6 natively and sandboxing is a Linux thing not docker specific!
+* Info on Docker and IPv6 is wrong/confusing, it explains how to run the docker deamon in dual stack mode and has nothing to do with the actual docker networks and/or docker ipam used internally.
+
+
+
+
+
+
+
+
+
 With the introduction of the Docker networks feature, you can create your own user-defined networks. The Docker default bridge is created when you install Docker Engine. It is a `bridge` network and is also named `bridge`. The topics in this section are related to interacting with that default bridge network.
 
 * [Understand container communication](http://docs.docker.oeynet.com/engine/userguide/networking/default_network/container-communication/)

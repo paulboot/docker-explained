@@ -12,7 +12,7 @@
 | --------------------------------------------------------- | ------------------------------------------------------------ |
 | `docker-compose exec -T xxxx`                             | **NOTE:** spawn een terminal anders geen output ook niet na een \| pipe in een cronjob! |
 | `docker-compose pull`                                     | Pull updated images from repro                               |
-| `docker-compose build <service_name>`                     | Do a local build of an image using the mages from the docker repro, in the compose file the `dockerfile: <dockerfile_name>` |
+| `docker-compose build <service_name>`                     | Do a local build of an image using the mages from the docker repro, in the compose file the `dockerfile: <dockerfile_name>`<br /><br />`NOTICE: PHP message: PHP Fatal error:  Call to undefined function mysqli_connect()`<br />Rebuild the PHP image with lcoa added Myslq functions! |
 | `docker-compose stop <service_name>`                      |                                                              |
 | `docker-compose up -d`                                    | Depending on the configuration this command builds locally and image or pulls an image from a repo. Then a container and network will be build and made active. The `-d ` detaches from the log output. Use `docker-compose logs -f ` to tail the logs of all services (or also called apps). |
 | `docker-compose up -d --no-deps <service_name>`           |                                                              |
