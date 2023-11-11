@@ -4,6 +4,20 @@
 
 # TL;DR
 
+* > **ANGRY:** "error while parsing rule Host('dashboard.bocuse.nl'): 1:6: illegal rune literal"
+  >
+  > Yes, it really means you used the wrong ticks 'bla' 
+  >
+  > ```
+  > Host('dashboard.bocuse.nl')
+  > ```
+  >
+  > It rather should be the ``
+  >
+  > ```
+  > Host(`dashboard.bocuse.nl`)
+  > ```
+
 * Let's Encrypt, provides Domain Validation (DV) certificates.
 
   * It issues certificates for specific domains in exchange for proof of ownership for those domains.
