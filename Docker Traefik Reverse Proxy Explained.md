@@ -44,6 +44,53 @@
 
 
 
+# Docker compose example
+
+```
+version: '3.8'
+
+services:
+    web:
+        restart: always
+        networks:
+            - external_dev_vlan20
+            #    ipv4_address: 192.168.20.10
+            - net_192_168_3
+        dns: 192.168.100.1
+        expose:
+            - "80"
+        volumes:
+            - ./site.conf:/etc/nginx/conf.d/default.conf
+        image: nginx:1.25.3
+        labels:
+            - "traefik.docker.network=external_dev_vlan20"
+            - "traefik.enable=true"
+            - "traefik.http.services.dashboard_bocuse_nl.loadbalancer.server.port=80"
+            # HTTP
+            - "traefik.http.routers.dashboard_bocuse_nl_80.entrypoints=web"
+            - "traefik.http.routers.dashboard_bocuse_nl_80.rule=Host(`dashboard.bocuse.nl`) || Host(`dashboard.weerboot.nl`)"
+            - "traefik.http.routers.dashboard_bocuse_nl_80.middlewares=redirect-dashboard_bocuse_nl_443"
+            # HTTPS
+            - "traefik.http.routers.dashboard_bocuse_nl_443.entrypoints=websecure"
+            - "traefik.http.routers.dashboard_bocuse_nl_443.rule=Host(`dashboard.bocuse.nl`) || Host(`dashboard.weerboot.nl`)"
+            - "traefik.http.routers.dashboard_bocuse_nl_443.tls=true"
+            - "traefik.http.routers.dashboard_bocuse_nl_443.tls.certresolver=lets-encrypt"
+            - "traefik.http.middlewares.redirect-dashboard_bocuse_nl_443.redirectscheme.scheme=https"
+            - "traefik.http.middlewares.redirect-dashboard_bocuse_nl_443.redirectscheme.port=443"
+        logging:
+            driver: local
+            options:
+                max-size: "100m"
+                max-file: "3"
+
+networks:
+    external_dev_vlan20:
+        external: true
+    net_192_168_3:
+        external: true
+
+```
+
 ### Introduction
 
 [Docker](https://www.docker.com/) can be an efficient way to run web applications in production, but you may want to run multiple applications on the same Docker host. In this situation, you’ll need to set up a reverse proxy. This is because you only want to expose ports `80` and `443` to the rest of the world.
