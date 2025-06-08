@@ -10,21 +10,21 @@
 
 |                                                           |                                                              |
 | --------------------------------------------------------- | ------------------------------------------------------------ |
-| `docker-compose exec -T xxxx`                             | **NOTE:** spawn een terminal anders geen output ook niet na een \| pipe in een cronjob! |
-| `docker-compose pull`                                     | Pull updated images from repro                               |
-| `docker-compose build <service_name>`                     | Do a local build of an image using the mages from the docker repro, in the compose file the `dockerfile: <dockerfile_name>`<br /><br />`NOTICE: PHP message: PHP Fatal error:  Call to undefined function mysqli_connect()`<br />Rebuild the PHP image with lcoa added Myslq functions! |
-| `docker-compose stop <service_name>`                      |                                                              |
-| `docker-compose up -d`                                    | Depending on the configuration this command builds locally and image or pulls an image from a repo. Then a container and network will be build and made active. The `-d ` detaches from the log output. Use `docker-compose logs -f ` to tail the logs of all services (or also called apps). |
-| `docker-compose up -d --no-deps <service_name>`           |                                                              |
-| `docker-compose up -d --no-deps --build <service_name>`   |                                                              |
-| `docker-compose up --force-recreate --build -d --no-deps` |                                                              |
+| `docker compose exec -T xxxx`                             | **NOTE:** spawn een terminal anders geen output ook niet na een \| pipe in een cronjob! |
+| `docker compose pull`                                     | Only pull updated images from repro, check to see double images `docker images` |
+| `docker compose build <service_name>`                     | Do a local build of an image using the mages from the docker repro, in the compose file the `dockerfile: <dockerfile_name>`<br /><br />`NOTICE: PHP message: PHP Fatal error:  Call to undefined function mysqli_connect()`<br />Rebuild the PHP image with lcoa added Myslq functions! |
+| `docker compose stop <service_name>`                      |                                                              |
+| `docker compose up -d`                                    | Depending on the images available this command builds a container or pulls and builds/updates an container. The `-d ` detaches from the log output. Use `docker compose logs -f ` to tail the logs of all services (or also called apps). |
+| `docker compose up -d --no-deps <service_name>`           |                                                              |
+| `docker compose up -d --no-deps --build <service_name>`   |                                                              |
+| `docker compose up --force-recreate --build -d --no-deps` |                                                              |
 | `docker image prune -f`                                   |                                                              |
-| `docker-compose stop`                                     | Command will stop your containers, but it won’t remove them. |
-| `docker-compose down`                                     | Command will stop your containers, but it also removes the stopped containers as well as any networks that were created. Will not remove images. |
-| `docker-compose down -v`                                  | The `-v` flag to remove all volumes too.                     |
-| `docker-compose config --services`                        |                                                              |
-| `docker-compose logs -f <service-name>`                   | Use  THIS `tail -f` like command to debug all or a single service. |
-| docker-compose ps                                         |                                                              |
+| `docker compose stop`                                     | Command will stop your containers, but it won’t remove them. |
+| `docker compose down`                                     | Command will stop your containers, but it also removes the stopped containers as well as any networks that were created. Will not remove images. |
+| `docker compose down -v`                                  | The `-v` flag to remove all volumes too.                     |
+| `docker compose config --services`                        |                                                              |
+| `docker compose logs -f <service-name>`                   | Use  THIS `tail -f` like command to debug all or a single service. |
+| `docker compose ps`                                       |                                                              |
 | docker info \| grep Swarm                                 |                                                              |
 | docker prune XXX (cleanup)                                |                                                              |
 | docker system prune -a                                    |                                                              |
